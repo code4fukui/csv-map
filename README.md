@@ -15,6 +15,7 @@ title,url,filename,geo3x3
 福井高専,https://code4fukui.github.io/vr-fukui/vr-view.html#img/vr-fnct.jpg,vr-fnct.jpg,E9138732251953
 </csv-map>
 ```
+(position: geo3x3 or lat,lng ...)
 
 2. src
 
