@@ -2,6 +2,8 @@ import L from "https://code4sabae.github.io/leaflet-mjs/leaflet.mjs";
 import { CSV } from "https://code4sabae.github.io/js/CSV.js";
 import { Geo3x3 } from "https://taisukef.github.io/Geo3x3/Geo3x3.mjs";
 import { EXIF } from "https://taisukef.github.io/exif-js/EXIF.js";
+import { LeafletSprite } from "https://taisukef.github.io/leaflet.sprite-es/src/sprite.js";
+LeafletSprite.init(L);
 
 class CSVMap extends HTMLElement {
   constructor () {
@@ -43,6 +45,7 @@ class CSVMap extends HTMLElement {
     const icon = this.getAttribute("icon");
     const iconsize = this.getAttribute("iconsize") || 30;
     const filter = this.getAttribute("filter")?.split(",");
+    const allcolor = this.getAttribute("color");
     
     const map = L.map(div);
     // set 国土地理院地図 https://maps.gsi.go.jp/development/ichiran.html
@@ -59,7 +62,7 @@ class CSVMap extends HTMLElement {
       tbl.push("<table>");
       for (const name in d) {
         let val = d[name];
-        if (val.startsWith("http://") || val.startsWith("https://")) {
+        if (val && (val.startsWith("http://") || val.startsWith("https://"))) {
           val = "<a href=" + val + ">" + val + "</a>";
         }
         if (val) {
@@ -104,7 +107,6 @@ class CSVMap extends HTMLElement {
       const url = d["schema:url"] || d["url"];
       const opt = { title };
       const icon2 = icon || d["photo"];
-      console.log(icon2);
       const iconsize2 = iconsize * 2;
       if (icon2) {
         opt.icon = L.icon({
@@ -114,7 +116,13 @@ class CSVMap extends HTMLElement {
           iconAnchor: [iconsize2 / 2, iconsize2 / 2],
           popupAnchor: [0, -iconsize2 / 2],
         });
+      } else {
+        const color = d["color"] || allcolor;
+        if (LeafletSprite.colors.indexOf(color) >= 0) {
+          opt.icon = L.spriteIcon(color);
+        }
       }
+
       const marker = L.marker(ll, opt);
 
       const d2 = (() => {
