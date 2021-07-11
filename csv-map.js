@@ -6,16 +6,36 @@ import { EXIF } from "https://taisukef.github.io/exif-js/EXIF.js";
 class CSVMap extends HTMLElement {
   constructor () {
     super();
+    this.init();
+  }
+  async init () {
+    const getCSV = async () => {
+      const fn = this.getAttribute("src");
+      if (fn) {
+        console.log(fn);
+        const data = CSV.toJSON(await CSV.fetch(fn));
+        return data;
+      }
+      const txt = this.textContent.trim();
+      const data = CSV.toJSON(CSV.decode(txt));
+      this.textContent = "";
+      return data;
+    };
+    const data = await getCSV();
+    console.log(data);
 
     const grayscale = this.getAttribute("grayscale");
-
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = "https://code4sabae.github.io/leaflet-mjs/" + (grayscale ? "leaflet-grayscale.css" : "leaflet.css");
     this.appendChild(link);
-    link.onload = () => this.init();
-  }
-  async init () {
+    const waitOnload = async (comp) => {
+      return new Promise(resolve => {
+        comp.onload = resolve;
+      });
+    };
+    await waitOnload(link);
+
     const div = document.createElement("div");
     this.appendChild(div);
     div.style.width = this.getAttribute("width") || "100%";
@@ -33,10 +53,6 @@ class CSVMap extends HTMLElement {
 
     const iconlayer = L.layerGroup();
     iconlayer.addTo(map);
-
-    const fn = this.getAttribute("src");
-    console.log(fn);
-    const data = CSV.toJSON(await CSV.fetch(fn));
 
     const makeTable = (d) => {
       const tbl = [];
@@ -58,11 +74,10 @@ class CSVMap extends HTMLElement {
       return tbl.join("");
     };
 
-    console.log(data);
     const lls = [];
     for (const d of data) {
       const getLatLng = async (d) => {
-        const geo3x3 = d["sabaecc:geo3x3"] || d["geo3x3"];
+        const geo3x3 = d["sabaecc:geo3x3"] || d["geo3x3"] || d["Geo3x3"];
         if (geo3x3) {
           const pos = Geo3x3.decode(geo3x3);
           return [pos.lat, pos.lng];
