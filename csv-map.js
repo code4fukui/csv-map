@@ -83,7 +83,9 @@ class CSVMap extends HTMLElement {
         const geo3x3 = d["sabaecc:geo3x3"] || d["geo3x3"] || d["Geo3x3"];
         if (geo3x3) {
           const pos = Geo3x3.decode(geo3x3);
-          return [pos.lat, pos.lng];
+          if (pos) {
+            return [pos.lat, pos.lng];
+          }
         }
         const lat = d["schema:latitude"] || d["lattiude"] || d["lat"] || d["緯度"] || d["ic:緯度"];
         const lng = d["schema:longitude"] || d["longitude"] || d["lng"] || d["lon"] || d["経度"] || d["ic:経度"];
