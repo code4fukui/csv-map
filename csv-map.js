@@ -98,8 +98,13 @@ class CSVMap extends HTMLElement {
         }
         const bin = new Uint8Array(await (await fetch(img)).arrayBuffer());
         const exif = EXIF.readFromBinaryFile(bin.buffer);
-        const ll = EXIF.toLatLng(exif);
-        return [ll.lat, ll.lng];
+        if (exif) {
+          const ll = EXIF.toLatLng(exif);
+          if (ll) {
+            return [ll.lat, ll.lng];
+          }
+        }
+        return null;
       };
       const ll = await getLatLng(d);
       if (!ll) {
