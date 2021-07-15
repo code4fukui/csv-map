@@ -57,13 +57,19 @@ class CSVMap extends HTMLElement {
     const iconlayer = L.layerGroup();
     iconlayer.addTo(map);
 
+    const omit = (s, len) => {
+      if (s.length > len) {
+        return s.substring(0, len) + "...";
+      }
+      return s;
+    };
     const makeTable = (d) => {
       const tbl = [];
       tbl.push("<table>");
       for (const name in d) {
         let val = d[name];
         if (val && (val.startsWith("http://") || val.startsWith("https://"))) {
-          val = "<a href=" + val + ">" + val + "</a>";
+          val = "<a href=" + val + ">" + omit(val, 30) + "</a>";
         }
         if (val) {
           if (name == "sabaecc:geo3x3") {
