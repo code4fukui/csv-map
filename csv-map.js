@@ -98,7 +98,7 @@ class CSVMap extends HTMLElement {
         if (lat && lng) {
           return [lat, lng];
         }
-        const img = d["photo"];
+        const img = d["photo"] || d["image"];
         if (!img) {
           return null;
         }
@@ -119,7 +119,7 @@ class CSVMap extends HTMLElement {
       const title = d["schema:name"] || d["name"];
       const url = d["schema:url"] || d["url"];
       const opt = { title };
-      const icon2 = icon || d["photo"];
+      const icon2 = d["photo"] || d["image"] || icon;
       const iconsize2 = iconsize * 2;
       if (icon2) {
         opt.icon = L.icon({
@@ -151,7 +151,7 @@ class CSVMap extends HTMLElement {
         return res;
       })();
       const tbl = makeTable(d2);
-      marker.bindPopup((title ? `<a href=${url}>${title}</a>` : "") + tbl);
+      marker.bindPopup((title ? (url ? `<a href=${url}>${title}</a>` : title) : "") + tbl);
       iconlayer.addLayer(marker);
       lls.push(ll);
     }
