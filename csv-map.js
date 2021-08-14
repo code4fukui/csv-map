@@ -5,12 +5,38 @@ import { EXIF } from "https://taisukef.github.io/exif-js/EXIF.js";
 import { LeafletSprite } from "https://taisukef.github.io/leaflet.sprite-es/src/sprite.js";
 LeafletSprite.init(L);
 
+const omit = (s, len) => {
+  if (s.length > len) {
+    return s.substring(0, len) + "...";
+  }
+  return s;
+};
+const makeTable = (d) => {
+  const tbl = [];
+  tbl.push("<table>");
+  for (const name in d) {
+    let val = d[name];
+    if (val && (val.startsWith("http://") || val.startsWith("https://"))) {
+      val = "<a href=" + val + ">" + omit(val, 30) + "</a>";
+    }
+    if (val) {
+      if (name == "sabaecc:geo3x3") {
+        tbl.push(`<tr><th>${name}</th><td><a href=https://code4sabae.github.io/geo3x3-map/#${val}>${val}</a></td></tr>`);
+      } else {
+        tbl.push(`<tr><th>${name}</th><td>${val}</td></tr>`);
+      }
+    }
+  }
+  tbl.push("</table>");
+  return tbl.join("");
+};
+
 class CSVMap extends HTMLElement {
   constructor () {
     super();
     this.init();
   }
-  async init () {
+  async init() {
     const getCSV = async () => {
       const fn = this.getAttribute("src");
       if (fn) {
@@ -23,8 +49,8 @@ class CSVMap extends HTMLElement {
       this.textContent = "";
       return data;
     };
-    const data = await getCSV();
-    console.log(data);
+    this.data = await getCSV();
+    console.log(this.data);
 
     const grayscale = this.getAttribute("grayscale");
     const link = document.createElement("link");
@@ -42,46 +68,36 @@ class CSVMap extends HTMLElement {
     this.appendChild(div);
     div.style.width = this.getAttribute("width") || "100%";
     div.style.height = this.getAttribute("height") || "60vh";
-    const icon = this.getAttribute("icon");
-    const iconsize = this.getAttribute("iconsize") || 30;
-    const filter = this.getAttribute("filter")?.split(",");
-    const allcolor = this.getAttribute("color");
     
-    const map = L.map(div);
+    this.map = L.map(div);
     // set 国土地理院地図 https://maps.gsi.go.jp/development/ichiran.html
     L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png", {
       attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>"',
       maxZoom: 18,
-    }).addTo(map);
+    }).addTo(this.map);
 
-    const iconlayer = L.layerGroup();
-    iconlayer.addTo(map);
+    await this.redraw();
+  }
+  set value(d) { // JSON or CSV string
+    if (typeof d == "string") {
+      d = CSV.toJSON(CSV.decode(d));
+    }
+    this.data = d;
+    this.redraw();
+  }
+  async redraw() {
+    const data = this.data;
 
-    const omit = (s, len) => {
-      if (s.length > len) {
-        return s.substring(0, len) + "...";
-      }
-      return s;
-    };
-    const makeTable = (d) => {
-      const tbl = [];
-      tbl.push("<table>");
-      for (const name in d) {
-        let val = d[name];
-        if (val && (val.startsWith("http://") || val.startsWith("https://"))) {
-          val = "<a href=" + val + ">" + omit(val, 30) + "</a>";
-        }
-        if (val) {
-          if (name == "sabaecc:geo3x3") {
-            tbl.push(`<tr><th>${name}</th><td><a href=https://code4sabae.github.io/geo3x3-map/#${val}>${val}</a></td></tr>`);
-          } else {
-            tbl.push(`<tr><th>${name}</th><td>${val}</td></tr>`);
-          }
-        }
-      }
-      tbl.push("</table>");
-      return tbl.join("");
-    };
+    const icon = this.getAttribute("icon");
+    const iconsize = this.getAttribute("iconsize") || 30;
+    const filter = this.getAttribute("filter")?.split(",");
+    const allcolor = this.getAttribute("color");
+
+    if (this.iconlayer) {
+      this.map.removeLayer(this.iconlayer);
+    }
+    this.iconlayer = L.layerGroup();
+    this.iconlayer.addTo(this.map);
 
     const lls = [];
     for (const d of data) {
@@ -122,12 +138,16 @@ class CSVMap extends HTMLElement {
       const icon2 = d["photo"] || d["image"] || icon;
       const iconsize2 = iconsize * 2;
       if (icon2) {
+        const img = await fetchImage(icon2);
+        const size = getResized(img.width, img.height, iconsize2);
+        const iconw = size.width;
+        const iconh = size.height;
         opt.icon = L.icon({
           iconUrl: icon2,
           iconRetilaUrl: icon2,
-          iconSize: [iconsize2, iconsize2],
-          iconAnchor: [iconsize2 / 2, iconsize2 / 2],
-          popupAnchor: [0, -iconsize2 / 2],
+          iconSize: [iconw, iconh],
+          iconAnchor: [iconw / 2, iconh / 2],
+          popupAnchor: [0, -iconh / 2],
         });
       } else {
         const color = d["color"] || allcolor;
@@ -152,11 +172,11 @@ class CSVMap extends HTMLElement {
       })();
       const tbl = makeTable(d2);
       marker.bindPopup((title ? (url ? `<a href=${url}>${title}</a>` : title) : "") + tbl);
-      iconlayer.addLayer(marker);
+      this.iconlayer.addLayer(marker);
       lls.push(ll);
     }
     if (lls.length) {
-      map.fitBounds(lls);
+      this.map.fitBounds(lls);
     }
   }
 }
