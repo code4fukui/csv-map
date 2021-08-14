@@ -182,3 +182,5 @@ class CSVMap extends HTMLElement {
 }
 
 customElements.define('csv-map', CSVMap);
+
+export { CSVMap };
