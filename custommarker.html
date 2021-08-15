@@ -1,0 +1,108 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+</head><body>
+<script type="module">
+import { h1, add, link } from "https://js.sabae.cc/stdom.js";
+//import { CSVMap } from "https://code4fukui.github.io/csv-map/csv-map.js";
+import { CSVMap } from "./csv-map.js";
+import { CSV } from "https://js.sabae.cc/CSV.js";
+import { QRCode } from "https://code4fukui.github.io/qr-code/qr-code.js";
+import { Day } from "https://code4fukui.github.io/day-es/Day.js";
+import { getCurrentPosition } from "https://js.sabae.cc/getCurrentPosition.js";
+
+class CustomMap extends CSVMap {
+  constructor() {
+    super();
+  }
+  async getMarker(d, ll) {
+    let a1 = d['河川水位'];
+    let a2 = d['はん濫危険水位'] || d['避難判断水位'] || d['はん濫注意水位'] || d['水防団待機水位'];
+
+    if (String(a1).match(/^[\.0-9]*$/) == null) {
+      a1 = 0.01;
+    }
+    if (String(a2).match(/^[\.0-9]*$/) == null) {
+      a2 = a1;
+    }
+    
+    const rate = 0.01 * (a1 / a2);
+    const marker = L.polygon([
+      [ll[0] + 0.01, ll[1] - 0.01],
+      [ll[0] + 0.01, ll[1] + 0.01],
+      [ll[0],        ll[1] + 0.01],
+      [ll[0],        ll[1] - 0.01],
+    ], {});
+    const marker2 = L.polygon([
+      [ll[0] + rate, ll[1] - 0.01],
+      [ll[0] + rate, ll[1] + 0.01],
+      [ll[0],        ll[1] + 0.01],
+      [ll[0],        ll[1] - 0.01],
+    ], {
+      color: 'red',
+      fillColor: 'red'
+    });
+    this.iconlayer.addLayer(marker2);
+    return marker;
+  }
+}
+
+customElements.define("custom-map", CustomMap);
+
+onload = async () => {
+  document.body.style.textAlign = "center";
+
+  h1("福井県河川水位計マップ");
+
+  const map = new CustomMap();
+  document.body.appendChild(map);
+
+  const sensors = CSV.toJSON(await CSV.fetch("https://code4fukui.github.io/waterlevel_fukui/sensors.csv"));
+  const data = CSV.toJSON(await CSV.fetch("https://code4fukui.github.io/waterlevel_fukui/data/" + new Day().toString() + ".csv")).reverse();
+
+  const getTransition = (data) => {
+    const n = Math.min(5, data.length);
+    const res = [];
+    for (let i = 0; i < n; i++) {
+      const d = data[i];
+      res.push(d.河川水位 + "m(" + d.日時.substring(d.日時.length - 5) + ")");
+    }
+    const t = res.reverse().join(" → ");
+    return t;
+  };
+  sensors.forEach(s => {
+    const d = data.find(d => d.id == s.id);
+    s.河川水位 = d.河川水位;
+    s.水位の推移 = getTransition(data.filter(d => d.id == s.id));
+    s.日時 = d.日時;
+    delete s.日付;
+    // "blue", "green", "orange", "yellow", "red", "purple", "violet"
+    const p = (s) => parseFloat(s);
+    if (p(s.河川水位) >= p(s.はん濫危険水位)) {
+      s.color = "red";
+    } else if (p(s.河川水位) >= p(s.避難判断水位)) {
+      s.color = "orange";
+    } else if (p(s.河川水位) >= p(s.はん濫注意水位)) {
+      s.color = "yellow";
+    } else if (p(s.河川水位) >= p(s.水防団待機水位)) {
+      s.color = "purple";
+    } else {
+      s.color = "green";
+    }
+  });
+  map.value = sensors;
+
+  const btn = document.createElement("button");
+  btn.textContent = "現在位置付近を見る(GPS等使用)";
+  btn.style.margin = "1em";
+  btn.onclick = async () => {
+    const pos = await getCurrentPosition();
+    map.map.flyTo(new L.LatLng(pos.latitude, pos.longitude), 14);
+  };
+  document.body.appendChild(btn);
+  add("br");
+
+  link("DATA: CC BY 福井県河川水位オープンデータ", "https://github.com/code4fukui/waterlevel_fukui");
+  add("br");
+
+  document.body.appendChild(new QRCode());
+};
+</script>
