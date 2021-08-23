@@ -6,6 +6,13 @@ import { fetchImage } from "https://js.sabae.cc/fetchImage.js";
 import { LeafletSprite } from "https://taisukef.github.io/leaflet.sprite-es/src/sprite.js";
 LeafletSprite.init(L);
 
+const getResized = (w, h, min) => {
+  if (w > h) {
+      return { width: min, height: min * h / w };
+  } else {
+      return { width: min * w / h, height: min };
+  }
+};
 const omit = (s, len) => {
   if (s.length > len) {
     return s.substring(0, len) + "...";
