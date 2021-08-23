@@ -2,6 +2,7 @@ import L from "https://code4sabae.github.io/leaflet-mjs/leaflet.mjs";
 import { CSV } from "https://code4sabae.github.io/js/CSV.js";
 import { Geo3x3 } from "https://taisukef.github.io/Geo3x3/Geo3x3.mjs";
 import { EXIF } from "https://taisukef.github.io/exif-js/EXIF.js";
+import { fetchImage } from "https://js.sabae.cc/fetchImage.js";
 import { LeafletSprite } from "https://taisukef.github.io/leaflet.sprite-es/src/sprite.js";
 LeafletSprite.init(L);
 
