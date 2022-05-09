@@ -87,6 +87,9 @@ class CSVMap extends HTMLElement {
     if (lat && lng) {
       return [lat, lng];
     }
+    if (this.getAttribute("useimage") == "false") {
+      return null;
+    }
     const img = d["photo"] || d["image"];
     if (!img) {
       return null;
@@ -127,7 +130,7 @@ class CSVMap extends HTMLElement {
 
     const title = d["schema:name"] || d["name"];
     const opt = { title };
-    const icon2 = d["photo"] || d["image"] || d["icon"] || icon;
+    const icon2 = this.getAttribute("useimage") != "false" ? d["photo"] || d["image"] || d["icon"] || icon : icon;
     const iconsize2 = iconsize * 2;
     if (icon2) {
       const img = await fetchImage(icon2);
