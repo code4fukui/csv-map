@@ -124,6 +124,12 @@ class CSVMap extends HTMLElement {
     return tbl.join("");
   }
   async getMarker(d, ll) {
+    if (this.getAttribute("lightmode") == "true") {
+      return L.circle(ll, {
+        radius: 10,
+        color: d["color"] || allcolor,
+      });
+    }
     const icon = this.getAttribute("icon");
     const iconsize = this.getAttribute("iconsize") || 30;
     const allcolor = this.getAttribute("color");
