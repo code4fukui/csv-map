@@ -124,7 +124,7 @@ class CSVMap extends HTMLElement {
     return tbl.join("");
   }
   async getMarker(d, ll) {
-    const allcolor = this.getAttribute("color");
+    const allcolor = this.getAttribute("color") || "red";
     if (this.getAttribute("lightmode") == "true") {
       return L.circle(ll, {
         radius: 10,
