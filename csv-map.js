@@ -124,6 +124,7 @@ class CSVMap extends HTMLElement {
     return tbl.join("");
   }
   async getMarker(d, ll) {
+    const allcolor = this.getAttribute("color");
     if (this.getAttribute("lightmode") == "true") {
       return L.circle(ll, {
         radius: 10,
@@ -132,7 +133,6 @@ class CSVMap extends HTMLElement {
     }
     const icon = this.getAttribute("icon");
     const iconsize = this.getAttribute("iconsize") || 30;
-    const allcolor = this.getAttribute("color");
 
     const title = d["schema:name"] || d["name"];
     const opt = { title };
