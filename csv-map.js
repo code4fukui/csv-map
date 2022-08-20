@@ -86,6 +86,20 @@ class CSVMap extends HTMLElement {
     const lng = d["schema:longitude"] || d["longitude"] || d["lng"] || d["lon"] || d["long"] || d["経度"] || d["ic:経度"];
     if (lat && lng) {
       return [lat, lng];
+    } else {
+      const find = (prefix) => {
+        for (const name in d) {
+          if (name.toLowerCase().startsWith(prefix)) {
+            return d[name];
+          }
+        }
+        return null;
+      };
+      const lat = find("latitude_");
+      const lng = find("longitude_");
+      if (lat && lng) {
+        return [lat, lng];
+      }
     }
     if (this.getAttribute("useimage") == "false") {
       return null;
