@@ -150,7 +150,7 @@ class CSVMap extends HTMLElement {
 
     const title = d["schema:name"] || d["name"];
     const opt = { title };
-    const icon2 = this.getAttribute("useimage") != "false" ? d["photo"] || d["image"] || d["icon"] || icon : icon;
+    const icon2 = this.getAttribute("useimage") != "false" ? d["icon"] || d["photo"] || d["image"] || icon : icon;
     const iconsize2 = iconsize * 2;
     if (icon2) {
       const img = await fetchImage(icon2);
