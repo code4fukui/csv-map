@@ -85,7 +85,13 @@ class CSVMap extends HTMLElement {
     const lat = d["schema:latitude"] || d["latitude"] || d["lat"] || d["緯度"] || d["ic:緯度"];
     const lng = d["schema:longitude"] || d["longitude"] || d["lng"] || d["lon"] || d["long"] || d["経度"] || d["ic:経度"];
     if (lat && lng) {
-      return [lat, lng];
+      const strim = (s) => {
+        if (typeof s == "string") {
+          return s.trim();
+        }
+        return s;
+      };
+      return [strim(lat), strim(lng)];
     } else {
       const find = (prefix) => {
         for (const name in d) {
