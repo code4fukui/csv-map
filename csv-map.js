@@ -60,7 +60,9 @@ class CSVMap extends HTMLElement {
     
     this.map = L.map(div);
     // set 国土地理院地図 https://maps.gsi.go.jp/development/ichiran.html
-    L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png", {
+    const land = "https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png";
+    const sat = "https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg";
+    L.tileLayer(this.getAttribute("satellite") ? sat : land, {
       attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>"',
       maxZoom: 18,
     }).addTo(this.map);
