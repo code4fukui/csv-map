@@ -39,7 +39,7 @@ class CSVMap extends HTMLElement {
       return data;
     };
     this.data = await getCSV();
-    console.log(this.data);
+    //console.log(this.data);
 
     const grayscale = this.getAttribute("grayscale");
     const link = document.createElement("link");
@@ -145,8 +145,8 @@ class CSVMap extends HTMLElement {
     tbl.push("</table>");
     return tbl.join("");
   }
-  async getMarker(d, ll) {
-    const allcolor = this.getAttribute("color") || "blue";
+  async getMarker(d, ll, defcolor = "blue") {
+    const allcolor = this.getAttribute("color") || defcolor;
     if (this.getAttribute("lightmode") == "true") {
       return L.circle(ll, {
         radius: 10,
@@ -209,17 +209,68 @@ class CSVMap extends HTMLElement {
     this.iconlayer = L.layerGroup();
     this.iconlayer.addTo(this.map);
 
-    const lls = [];
-    for (const d of this.data) {
-      const ll = await this.getLatLng(d);
-      if (!ll) {
-        continue;
-      }
-      const marker = await this.getMarker(d, ll);
-      await this.bindPopup(d, marker);
-      lls.push(ll);
+    const level = this.getAttribute("level");
+    console.log(level);
 
-      this.iconlayer.addLayer(marker);
+    const lls = [];
+    if (level == null) {
+      for (const d of this.data) {
+        const ll = await this.getLatLng(d);
+        if (!ll) {
+          continue;
+        }
+        const marker = await this.getMarker(d, ll);
+        await this.bindPopup(d, marker);
+        lls.push(ll);
+
+        this.iconlayer.addLayer(marker);
+      }
+    } else {
+      const geos = {};
+      for (const d of this.data) {
+        const ll = await this.getLatLng(d);
+        if (!ll) {
+          continue;
+        }
+        const geo = Geo3x3.encode(ll[0], ll[1], level);
+        let t = geos[geo];
+        if (!t) {
+          t = [];
+          geos[geo] = t;
+          const latlng = Geo3x3.decode(geo);
+          const ll2 = [latlng.lat, latlng.lng];
+          const marker = await this.getMarker(d, ll2);
+          this.iconlayer.addLayer(marker);
+          lls.push(ll2);
+          marker.on("click", async () => {
+            if (this.iconlayer2) {
+              this.map.removeLayer(this.iconlayer2);
+              this.iconlayer.addLayer(this.bkmarker);
+            }
+            this.bkmarker = marker;
+            this.iconlayer.removeLayer(marker);
+
+            this.iconlayer2 = L.layerGroup();
+            this.iconlayer2.addTo(this.map);
+
+            const lls = [];
+            for (const d of geos[geo]) {
+              const ll = await this.getLatLng(d);
+              if (!ll) {
+                continue;
+              }
+              const marker = await this.getMarker(d, ll, "red");
+              await this.bindPopup(d, marker);
+              lls.push(ll);
+              this.iconlayer2.addLayer(marker);
+            }
+            if (lls.length) {
+              //this.map.fitBounds(lls);
+            }
+          });
+        }
+        t.push(d);
+      }
     }
     if (lls.length) {
       this.map.fitBounds(lls);
