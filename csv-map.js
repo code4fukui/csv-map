@@ -20,6 +20,12 @@ const omit = (s, len) => {
   return s;
 };
 
+const createIconClickEvent = (data) => {
+  const e = new Event("iconclick");
+  e.detail = data;
+  return e;
+};
+
 class CSVMap extends HTMLElement {
   constructor() {
     super();
@@ -210,7 +216,6 @@ class CSVMap extends HTMLElement {
     this.iconlayer.addTo(this.map);
 
     const level = this.getAttribute("level");
-    console.log(level);
 
     const lls = [];
     if (level == null) {
@@ -224,6 +229,9 @@ class CSVMap extends HTMLElement {
         lls.push(ll);
 
         this.iconlayer.addLayer(marker);
+        marker.on("click", async (e) => {
+          this.dispatchEvent(createIconClickEvent(d));
+        });
       }
     } else {
       const geos = {};
@@ -239,10 +247,10 @@ class CSVMap extends HTMLElement {
           geos[geo] = t;
           const latlng = Geo3x3.decode(geo);
           const ll2 = [latlng.lat, latlng.lng];
-          const marker = await this.getMarker(d, ll2);
+          const marker = await this.getMarker({}, ll2);
           this.iconlayer.addLayer(marker);
           lls.push(ll2);
-          marker.on("click", async () => {
+          marker.on("click", async (e) => {
             if (this.iconlayer2) {
               this.map.removeLayer(this.iconlayer2);
               this.iconlayer.addLayer(this.bkmarker);
@@ -263,6 +271,9 @@ class CSVMap extends HTMLElement {
               await this.bindPopup(d, marker);
               lls.push(ll);
               this.iconlayer2.addLayer(marker);
+              marker.on("click", async (e) => {
+                this.dispatchEvent(createIconClickEvent(d));
+              });
             }
             if (lls.length) {
               //this.map.fitBounds(lls);
