@@ -35,7 +35,6 @@ class CSVMap extends HTMLElement {
     const getCSV = async () => {
       const fn = this.getAttribute("src");
       if (fn) {
-        console.log(fn);
         const data = CSV.toJSON(await CSV.fetch(fn));
         return data;
       }
@@ -184,7 +183,6 @@ class CSVMap extends HTMLElement {
         opt.icon = L.spriteIcon(color);
       }
     }
-
     return L.marker(ll, opt);
   }
   async bindPopup(d, marker) {
@@ -217,13 +215,27 @@ class CSVMap extends HTMLElement {
 
     const level = this.getAttribute("level");
 
+    const checkLatLng = (ll, data) => {
+      if (!ll) return false;
+      const lat = parseFloat(ll[0]);
+      const lng = parseFloat(ll[1]);
+      if (lat === undefined || lng === undefined) return false;
+      if (isNaN(lat) || isNaN(lng)) return false;
+      if (lat > 90 || lat < -90) {
+        console.log("illegal lat", lat, data);
+        return false;
+      }
+      if (lng > 180 || lng < -180) {
+        console.log("illegal lng", lng, data);
+        return false;
+      }
+      return true;
+    };
     const lls = [];
     if (level == null) {
       for (const d of this.data) {
         const ll = await this.getLatLng(d);
-        if (!ll) {
-          continue;
-        }
+        if (!checkLatLng(ll, d)) continue;
         const marker = await this.getMarker(d, ll);
         await this.bindPopup(d, marker);
         lls.push(ll);
@@ -237,9 +249,7 @@ class CSVMap extends HTMLElement {
       const geos = {};
       for (const d of this.data) {
         const ll = await this.getLatLng(d);
-        if (!ll) {
-          continue;
-        }
+        if (!checkLatLng(ll, d)) continue;
         const geo = Geo3x3.encode(ll[0], ll[1], level);
         let t = geos[geo];
         if (!t) {
