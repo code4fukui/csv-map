@@ -121,13 +121,16 @@ class CSVMap extends HTMLElement {
     if (!img) {
       return null;
     }
-    const bin = new Uint8Array(await (await fetch(img)).arrayBuffer());
-    const exif = EXIF.readFromBinaryFile(bin.buffer);
-    if (exif) {
-      const ll = EXIF.toLatLng(exif);
-      if (ll) {
-        return [ll.lat, ll.lng];
+    try {
+      const bin = new Uint8Array(await (await fetch(img)).arrayBuffer());
+      const exif = EXIF.readFromBinaryFile(bin.buffer);
+      if (exif) {
+        const ll = EXIF.toLatLng(exif);
+        if (ll) {
+          return [ll.lat, ll.lng];
+        }
       }
+    } catch (e) {
     }
     return null;
   };
