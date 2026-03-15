@@ -1,5 +1,7 @@
 # csv-map
 
+> 日本語のREADMEはこちらです: [README.ja.md](README.ja.md)
+
 A web component to display a map with markers based on CSV data.
 
 ## Demo
